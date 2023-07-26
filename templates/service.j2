@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+[Unit]
+Description={{ item.key }} Service
+
+[Service]
+Type=oneshot
+{% if item.value.service_ExecStartPre is defined %}
+ExecStartPre={{ item.value.service_ExecStartPre }}
+{% endif %}
+ExecStart={{ item.value.service_ExecStart }}
+{% if item.value.service_User is defined %}
+User={{ item.value.service_User }}
+{% endif %}
