@@ -27,7 +27,7 @@
   notify: Reload systemd
 
 - name: Add changed timer units to list # noqa no-handler
-  set_fact:
+  ansible.builtin.set_fact:
     restart_timers: "{{ restart_timers | default([]) + [item.item.key] }}"
   when: item.changed
   loop: "{{ timers_changed.results }}"
