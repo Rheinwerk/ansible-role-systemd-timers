@@ -23,6 +23,9 @@ systemd_timers:
 
 | Variable | Required |  Default value / Explanation |
 |----------|----------|------------------------------|
+| unit_Requires | no |  Declares a strong requirement dependency. |
+| unit_Before | no | Start-up of depending unit is delayed |
+| unit_After | no | The listed unit is fully started up before the configured |
 | service_ExecStartPre | no | Pre-command before command |
 | service_ExecStart |  yes | Which command or script to execute |
 | service_User | no | Under which users the timer_command is executed. Default: root |
