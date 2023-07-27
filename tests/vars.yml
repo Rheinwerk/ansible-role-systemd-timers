@@ -1,0 +1,5 @@
+---
+systemd_timers:
+   example:
+      service_ExecStart: /bin/true
+      timer_OnCalendar: Weekly

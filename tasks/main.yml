@@ -1,0 +1,51 @@
+---
+- name: Failing when service_ExecStart is undefined
+  ansible.builtin.fail:
+    msg: Varible service_ExecStart is not defined
+  when: item.value.service_ExecStart is undefined
+  loop: "{{ systemd_timers | dict2items }}"
+
+- name: Uploading service file
+  ansible.builtin.template:
+    src: service.j2
+    dest: "{{ systemd_base_path | default('/etc/systemd/system') }}/{{ item.key }}.service"
+    owner: "{{ item.value.service_User | default('root') }}"
+    group: "{{ item.value.service_User | default('root') }}"
+    mode: "0644"
+  loop: "{{ systemd_timers | dict2items }}"
+  notify: Reload systemd
+
+- name: Uploading timer file
+  ansible.builtin.template:
+    src: timer.j2
+    dest: "{{ systemd_base_path | default('/etc/systemd/system') }}/{{ item.key }}.timer"
+    owner: "{{ item.value.service_User | default('root') }}"
+    group: "{{ item.value.service_User | default('root') }}"
+    mode: "0644"
+  loop: "{{ systemd_timers | dict2items }}"
+  register: timers_changed
+  notify: Reload systemd
+
+- name: Add changed timer units to list # noqa no-handler
+  ansible.builtin.set_fact:
+    restart_timers: "{{ restart_timers | default([]) + [item.item.key] }}"
+  when: item.changed
+  loop: "{{ timers_changed.results }}"
+
+- name: Enabling timers if timer file is not changed
+  ansible.builtin.systemd:
+    name: "{{ item.key }}.timer"
+    state: started
+    enabled: true
+    masked: false
+  when: item.key not in restart_timers | default([])
+  loop: "{{ systemd_timers | dict2items }}"
+
+- name: Restarting timers if timer file is changed
+  ansible.builtin.systemd:
+    name: "{{ item.key }}.timer"
+    state: restarted
+    enabled: true
+    masked: false
+  when: item.key in restart_timers | default([])
+  loop: "{{ systemd_timers | dict2items }}"
